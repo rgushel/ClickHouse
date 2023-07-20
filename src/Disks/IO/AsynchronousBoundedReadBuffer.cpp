@@ -130,6 +130,8 @@ void AsynchronousBoundedReadBuffer::setReadUntilPosition(size_t position)
             if (working_buffer.size() >= file_offset_of_buffer_end - position)
             {
                 /// new read until position is inside working buffer
+                working_buffer = Buffer(working_buffer.begin(), working_buffer.end() - (file_offset_of_buffer_end - position));
+                pos = std::min(pos, working_buffer.end());
                 file_offset_of_buffer_end = position;
             }
             else
@@ -231,13 +233,10 @@ bool AsynchronousBoundedReadBuffer::nextImpl()
         pos = working_buffer.begin();
     }
 
-    file_offset_of_buffer_end = impl->getFileOffsetOfBufferEnd();
-    bytes_to_ignore = 0;
+    file_offset_of_buffer_end += available();
 
-    /// In case of multiple files for the same file in clickhouse (i.e. log family)
-    /// file_offset_of_buffer_end will not match getImplementationBufferOffset()
-    /// so we use [impl->getImplementationBufferOffset(), impl->getFileSize()]
-    chassert(file_offset_of_buffer_end <= impl->getFileSize());
+    /// `impl` internally may have read more than we asked for.
+    chassert(file_offset_of_buffer_end <= impl->getFileOffsetOfBufferEnd());
 
     return bytes_read;
 }
@@ -250,7 +249,7 @@ off_t AsynchronousBoundedReadBuffer::seek(off_t offset, int whence)
     size_t new_pos;
     if (whence == SEEK_SET)
     {
-        assert(offset >= 0);
+        chassert(offset >= 0);
         new_pos = offset;
     }
     else if (whence == SEEK_CUR)
@@ -276,8 +275,8 @@ off_t AsynchronousBoundedReadBuffer::seek(off_t offset, int whence)
             /// Position is still inside the buffer.
             /// Probably it is at the end of the buffer - then we will load data on the following 'next' call.
             pos = working_buffer.end() - file_offset_of_buffer_end + new_pos;
-            assert(pos >= working_buffer.begin());
-            assert(pos <= working_buffer.end());
+            chassert(pos >= working_buffer.begin());
+            chassert(pos <= working_buffer.end());
 
             return new_pos;
         }
@@ -303,7 +302,7 @@ off_t AsynchronousBoundedReadBuffer::seek(off_t offset, int whence)
         break;
     }
 
-    assert(!prefetch_future.valid());
+    chassert(!prefetch_future.valid());
 
     /// First reset the buffer so the next read will fetch new data to the buffer.
     resetWorkingBuffer();
