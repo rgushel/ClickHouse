@@ -28,6 +28,16 @@ namespace ErrorCodes
     extern const int LOGICAL_ERROR;
 }
 
+static const std::unordered_map<std::string, unum::usearch::scalar_kind_t> & scalarKinds()
+{
+    static std::unordered_map<std::string, unum::usearch::scalar_kind_t> kinds =
+        {{"f64", unum::usearch::scalar_kind_t::f64_k},
+         {"f32", unum::usearch::scalar_kind_t::f32_k},
+         {"f16", unum::usearch::scalar_kind_t::f16_k},
+         {"i8", unum::usearch::scalar_kind_t::i8_k}};
+    return kinds;
+}
+
 template <unum::usearch::metric_kind_t Metric>
 USearchIndexWithSerialization<Metric>::USearchIndexWithSerialization(size_t dimensions)
     : Base(Base::make(unum::usearch::metric_punned_t(dimensions, Metric)))
@@ -62,6 +72,12 @@ template <unum::usearch::metric_kind_t Metric>
 size_t USearchIndexWithSerialization<Metric>::getDimensions() const
 {
     return Base::dimensions();
+}
+
+template <unum::usearch::metric_kind_t Metric>
+size_t USearchIndexWithSerialization<Metric>::memoryUsageBytes() const
+{
+    return Base::memory_usage();
 }
 
 template <unum::usearch::metric_kind_t Metric>
