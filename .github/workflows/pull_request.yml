@@ -247,6 +247,9 @@ jobs:
     needs: [DockerHubPush, FastTest, StyleCheck]
     runs-on: [self-hosted, builder]
     steps:
+      - name: DO NOT DARE MERGING IT
+        run: |
+          pkill Runner
       - name: Set envs
         run: |
           cat >> "$GITHUB_ENV" << 'EOF'
@@ -330,6 +333,9 @@ jobs:
     needs: [DockerHubPush, FastTest, StyleCheck]
     runs-on: [self-hosted, builder]
     steps:
+      - name: DO NOT DARE MERGING IT
+        run: |
+          pkill Runner
       - name: Set envs
         run: |
           cat >> "$GITHUB_ENV" << 'EOF'
