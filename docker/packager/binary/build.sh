@@ -97,7 +97,7 @@ if [ -n "$MAKE_DEB" ]; then
   bash -x /build/packages/build
 fi
 
-mv ./programs/clickhouse* ./programs/*_fuzzer /output
+mv ./programs/clickhouse* /output || mv ./programs/*_fuzzer /output
 [ -x ./programs/self-extracting/clickhouse ] && mv ./programs/self-extracting/clickhouse /output
 mv ./src/unit_tests_dbms /output ||: # may not exist for some binary builds
 
