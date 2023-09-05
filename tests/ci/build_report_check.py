@@ -15,6 +15,7 @@ from env_helper import (
     GITHUB_SERVER_URL,
     REPORTS_PATH,
     TEMP_PATH,
+    get_job_id_url,
 )
 from report import create_build_html_report, BuildResult
 from s3_helper import S3Helper
@@ -92,7 +93,9 @@ def main():
     ]
     missed_builds = len(missed_job_names)
     for job_name in reversed(missed_job_names):
-        build_results.insert(0, BuildResult.missed_result(job_name))
+        build_report = BuildResult.missed_result(job_name)
+        _, build_report.log_url = get_job_id_url(job_name)
+        build_results.insert(0, build_report)
 
     total_groups = sum(
         1 for build_result in build_results for urls in build_result.grouped_urls
