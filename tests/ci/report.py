@@ -11,6 +11,7 @@ import logging
 import os
 
 from ci_config import BuildConfig, CI_CONFIG
+from env_helper import get_job_id_url
 
 logger = logging.getLogger(__name__)
 
@@ -270,6 +271,7 @@ class BuildResult:
     status: StatusType
     elapsed_seconds: int
     job_name: str
+    _job_link: Optional[str] = None
     _grouped_urls: Optional[List[List[str]]] = None
 
     @property
@@ -354,6 +356,14 @@ class BuildResult:
             or self.version != "missing"
             or self.status != ERROR
         )
+
+    @property
+    def job_link(self) -> str:
+        if self._job_link is not None:
+            return self._job_link
+        _, job_url = get_job_id_url(self.job_name)
+        self._job_link = f'<a href="{job_url}">{self.job_name}</a>'
+        return self._job_link
 
     @staticmethod
     def get_report_name(name: str) -> Path:
@@ -596,7 +606,7 @@ HTML_BASE_BUILD_TEMPLATE = (
 </p>
 <table>
 <tr>
-<th>Config name</th>
+<th>Config/job name</th>
 <th>Compiler</th>
 <th>Build type</th>
 <th>Version</th>
@@ -628,7 +638,9 @@ def create_build_html_report(
     for build_result in build_results:
         for artifact_urls in build_result.grouped_urls:
             row = ["<tr>"]
-            row.append(f"<td>{build_result.build_name}</td>")
+            row.append(
+                f"<td>{build_result.build_name}<br/>{build_result.job_link}</td>"
+            )
             row.append(f"<td>{build_result.compiler}</td>")
             if build_result.debug_build:
                 row.append("<td>debug</td>")
